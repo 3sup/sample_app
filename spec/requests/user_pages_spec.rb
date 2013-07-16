@@ -6,59 +6,54 @@ describe "User pages" do
 
   describe "index" do
 
-    let(:user) { FactoryGirl.create(:user) }
-
-    before(:each) do
-      sign_in user
+    before do
+      sign_in FactoryGirl.create(:user)
+      FactoryGirl.create(:user, name: "Bob", email: "bob@example.com")
+      FactoryGirl.create(:user, name: "Ben", email: "ben@example.com")
       visit users_path
     end
 
     it { should have_selector('title', text: 'All users') }
-    it { should have_selector('h1',    text: 'All users') }
-
 
     describe "pagination" do
 
-      before(:all) { 30.times { FactoryGirl.create(:user) } }
+      before(:all) { 50.times { FactoryGirl.create(:user) } }
       after(:all)  { User.delete_all }
-      
-      it { should have_selector('div.pagination') } # Provvisorio
 
-#      let(:first_page)  { User.paginate(page: 1) }
-#      let(:second_page) { User.paginate(page: 2) }
+      let(:first_page)  { User.paginate(page: 1) }
+      let(:second_page) { User.paginate(page: 2) }
 
-#      it { should have_link('Next') }
-#      its(:html) { should match('>2</a>') }
+      it { should have_link('Next') }
+      its(:html) { should match('>2</a>') }
 
       it "should list each user" do
-        User.paginate(page: 1).each do |user|
-        page.should have_selector('li', text: user.name)
+        User.all[0..2].each do |user|
+          page.should have_selector('li', text: user.name)
+        end
+      end
+
+      it "should list the first page of users" do
+        first_page.each do |user|
+          page.should have_selector('li', text: user.name)
+        end
+      end
+
+      it "should not list the second page of users" do
+        second_page.each do |user|
+          page.should_not have_selector('li', text: user.name)
+        end
+      end
+
+      describe "showing the second page" do
+        before { visit users_path(page: 2) }
+
+        it "should list the second page of users" do
+          second_page.each do |user|
+            page.should have_selector('li', text: user.name)
+          end
+        end
       end
     end
-  end
-
-#      it "should list the first page of users" do
-#        first_page.each do |user|
-#          page.should have_selector('li', text: user.name)
-#        end
-#      end
-
-#      it "should not list the second page of users" do
-#        second_page.each do |user|
-#          page.should_not have_selector('li', text: user.name)
-#        end
-#      end
-
-#      describe "showing the second page" do
-#        before { visit users_path(page: 2) }
-
-#        it "should list the second page of users" do
-#          second_page.each do |user|
-#            page.should have_selector('li', text: user.name)
-#          end
-#        end
-#      end
-#    end
 
     describe "delete links" do
 
@@ -82,19 +77,19 @@ describe "User pages" do
 
   describe "profile page" do
     let(:user) { FactoryGirl.create(:user) }
-#    let!(:m1) { FactoryGirl.create(:micropost, user: user, content: "Foo") }
-#    let!(:m2) { FactoryGirl.create(:micropost, user: user, content: "Bar") }
+    let!(:m1) { FactoryGirl.create(:micropost, user: user, content: "Foo") }
+    let!(:m2) { FactoryGirl.create(:micropost, user: user, content: "Bar") }
 
     before { visit user_path(user) }
 
     it { should have_selector('h1',    text: user.name) }
     it { should have_selector('title', text: user.name) }
 
-#    describe "microposts" do
-#      it { should have_content(m1.content) }
-#      it { should have_content(m2.content) }
-#      it { should have_content(user.microposts.count) }
-#    end
+    describe "microposts" do
+      it { should have_content(m1.content) }
+      it { should have_content(m2.content) }
+      it { should have_content(user.microposts.count) }
+    end
 
 #    describe "follow/unfollow buttons" do
 #      let(:other_user) { FactoryGirl.create(:user) }
@@ -112,8 +107,8 @@ describe "User pages" do
 #        it "should increment the other user's followers count" do
 #          expect do
 #            click_button "Follow"
-#         end.to change(other_user.followers, :count).by(1)
-#       end
+#          end.to change(other_user.followers, :count).by(1)
+#        end
 
 #        describe "toggling the button" do
 #          before { click_button "Follow" }
@@ -144,7 +139,8 @@ describe "User pages" do
 #          it { should have_selector('input', value: 'Follow') }
 #        end
 #      end
-    end
+#    end
+  end
 
   describe "signup page" do
     before { visit signup_path }
@@ -200,7 +196,7 @@ describe "User pages" do
     let(:user) { FactoryGirl.create(:user) }
     before do
       sign_in user
-      visit edit_user_path(user)
+       visit edit_user_path(user)
     end
 
     describe "page" do
@@ -211,7 +207,6 @@ describe "User pages" do
 
     describe "with invalid information" do
       before { click_button "Save changes" }
-
       it { should have_content('error') }
     end
 
@@ -233,12 +228,13 @@ describe "User pages" do
       specify { user.reload.email.should == new_email }
     end
   end
-end
+
 #  describe "following/followers" do
 #    let(:user) { FactoryGirl.create(:user) }
 #    let(:other_user) { FactoryGirl.create(:user) }
 #    before { user.follow!(other_user) }
-
+#
+#
 #    describe "followed users" do
 #      before do
 #        sign_in user
@@ -261,4 +257,4 @@ end
 #      it { should have_link(user.name, href: user_path(user)) }
 #    end
 #  end
-
+end
